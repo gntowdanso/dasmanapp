@@ -2,11 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { mandateFormSchema } from '@/lib/validators';
 import { prisma } from '@/lib/db';
 import { encrypt } from '@/lib/encryption';
-import { generateMandatePDF } from '@/lib/pdfGenerator';
-import { writeFile, mkdir } from 'fs/promises';
-import { headers } from 'next/headers'; // To check for Vercel env or just headers?
-import { put } from '@vercel/blob';
-import path from 'path';
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,6 +19,10 @@ export async function POST(req: NextRequest) {
 
     const { fullName, ghanaCardNumber, agreementAccepted, signature, accounts, customerId } = body;
 
+    if (!customerId) {
+      return NextResponse.json({ error: 'Customer ID is required' }, { status: 400 });
+    }
+
     // Check customer exists
     const customer = await prisma.customer.findUnique({
       where: { id: customerId },
@@ -34,39 +33,22 @@ export async function POST(req: NextRequest) {
     }
 
     if (customer.status === 'SUBMITTED') {
-       // Allow resubmission? Probably not if token is invalidated.
+      return NextResponse.json({ error: 'Mandate already submitted' }, { status: 400 });
     }
 
-    // 2. Save Signature (Vercel Blob or Local Fallback)
-    const signatureBuffer = Buffer.from(signature.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-    let publicSignaturePath = '';
-
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      const { url } = await put(`signatures/sig_${customerId}_${Date.now()}.png`, signatureBuffer, {
-        access: 'public',
-      });
-      publicSignaturePath = url;
-    } else {
-      // Local Fallback
-      const signatureDir = path.join(process.cwd(), 'public', 'signatures');
-      await mkdir(signatureDir, { recursive: true });
-      const signatureFilename = `sig_${customerId}_${Date.now()}.png`;
-      const signaturePath = path.join(signatureDir, signatureFilename);
-      await writeFile(signaturePath, signatureBuffer);
-      publicSignaturePath = `/signatures/${signatureFilename}`;
-    }
+    // 2. Store signature as base64 data URL directly (no filesystem writes needed)
+    const signaturePath = signature || '';
 
     // 3. Create Mandate in Transaction
     const encryptedGha = encrypt(ghanaCardNumber);
 
     const mandate = await prisma.$transaction(async (tx) => {
-        // Create Mandate
         const newMandate = await tx.directDebitMandate.create({
             data: {
                 customer: { connect: { id: customerId } },
                 ghana_card_number: encryptedGha,
                 agreement_accepted: agreementAccepted,
-                digital_signature_path: publicSignaturePath,
+                digital_signature_path: signaturePath,
                 submitted_at: new Date(),
                 ip_address: req.headers.get('x-forwarded-for') || '127.0.0.1',
                 accounts: {
@@ -82,7 +64,7 @@ export async function POST(req: NextRequest) {
             include: { accounts: true, customer: true }
         });
 
-        // Update Customer
+        // Update Customer status
         await tx.customer.update({
             where: { id: customerId },
             data: { 
@@ -93,37 +75,6 @@ export async function POST(req: NextRequest) {
 
         return newMandate;
     });
-
-    // 4. Generate PDF (Vercel Blob or Local Fallback)
-    if (mandate) {
-        const pdfDoc = generateMandatePDF(mandate as any); 
-        const pdfArrayBuffer = pdfDoc.output('arraybuffer');
-        const pdfBuffer = Buffer.from(pdfArrayBuffer);
-        let pdfFilePath = '';
-
-        if (process.env.BLOB_READ_WRITE_TOKEN) {
-             const { url } = await put(`pdfs/Mandate_${mandate.id}.pdf`, pdfBuffer, {
-                access: 'public',
-             });
-             pdfFilePath = url;
-        } else {
-            // Local Fallback
-            const pdfDir = path.join(process.cwd(), 'public', 'pdfs');
-            await mkdir(pdfDir, { recursive: true });
-            const pdfFilename = `Mandate_${mandate.id}.pdf`;
-            const pdfPath = path.join(pdfDir, pdfFilename);
-            await writeFile(pdfPath, pdfBuffer);
-            pdfFilePath = `/pdfs/${pdfFilename}`;
-        }
-
-        // Record PDF 
-        await prisma.generatedPDF.create({
-            data: {
-                mandate_id: mandate.id,
-                file_path: pdfFilePath,
-            }
-        });
-    }
 
     return NextResponse.json({ success: true, mandateId: mandate.id }, { status: 201 });
   } catch (error: any) {

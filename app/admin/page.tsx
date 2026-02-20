@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { getDashboardStats } from '@/app/actions/dashboard';
 import { Users, MessageSquare, FileText } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 function StatCard({ 
   title, 
   icon, 

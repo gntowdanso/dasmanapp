@@ -8,6 +8,6 @@ export default defineConfig({
     seed: 'npx tsx prisma/seed.ts',
   },
   datasource: {
-    url: process.env.DATABASE_URL,
+    url: process.env.DATABASE_DASMAN_URL, // Use the specific environment variable for the database URL
   },
 });

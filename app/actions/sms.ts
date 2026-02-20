@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { sendMessage } from '@/services/messagingService';
+import { generateSecureToken } from '@/lib/token';
 import { revalidatePath } from 'next/cache';
 
 export async function getCustomersForSMS() {
@@ -40,18 +41,31 @@ export async function sendBulkSMS(customerIds: string[], messageTemplate: string
         }
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const baseUrl = process.env.SMS_DASMAN_SEND_URL || 'http://localhost:3000';
 
     for (const customer of customers) {
         try {
+            // Generate a fresh token with 30-minute expiry for each SMS send
+            const newToken = generateSecureToken();
+            const tokenExpiry = new Date();
+            tokenExpiry.setMinutes(tokenExpiry.getMinutes() + 30);
+
+            await prisma.customer.update({
+                where: { id: customer.id },
+                data: {
+                    session_token: newToken,
+                    token_expiry: tokenExpiry,
+                },
+            });
+
             // Replace placeholders
             // Supported: {name}, {link}, {account}
             let message = messageTemplate;
             message = message.replace(/{name}/g, customer.full_name);
             message = message.replace(/{account}/g, customer.account_number || '');
             
-            // Construct mandate link
-            const link = `${baseUrl}/mandate?token=${customer.session_token}`;
+            // Construct mandate link with fresh token
+            const link = `${baseUrl}/mandate?token=${newToken}`;
             message = message.replace(/{link}/g, link);
 
             const response = await sendMessage(customer.id, 'SMS', message);

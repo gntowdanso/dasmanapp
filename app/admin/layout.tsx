@@ -50,14 +50,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b border-blue-800">
-            <div className="flex items-center gap-2">
-              <div className="bg-yellow-400 p-2 rounded-lg">
-                <LayoutDashboard className="h-6 w-6 text-blue-900" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white tracking-tight">Letshego</h1>
-                <p className="text-xs text-blue-300 font-medium">Ghana Mandates</p>
-              </div>
+            <div className="flex items-center gap-3">
+              <img src="/letshego-logo.svg" alt="Letshego Ghana" className="h-10 bg-white rounded-md px-2 py-1" />
             </div>
             {/* Close button for mobile */}
             <button 
@@ -118,10 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Mobile Header */}
         <div className="lg:hidden flex items-center justify-between bg-white border-b border-gray-200 px-4 py-2">
           <div className="flex items-center gap-2">
-            <div className="bg-blue-900 p-1.5 rounded-md">
-                <LayoutDashboard className="h-5 w-5 text-yellow-400" />
-            </div>
-            <span className="font-bold text-blue-900">Letshego</span>
+            <img src="/letshego-logo.svg" alt="Letshego Ghana" className="h-8" />
           </div>
           <button
             onClick={() => setSidebarOpen(true)}

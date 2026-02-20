@@ -24,10 +24,10 @@ export async function sendMessage(customerId: string, type: 'SMS' | 'WHATSAPP', 
     });
 
     // 2. Call the provider API
-    const success = await sendToProvider(type, messageBody, customer.phone_number);
+    const result = await sendToProvider(type, messageBody, customer.phone_number);
 
     // 3. Update status based on provider response
-    if (success) {
+    if (result.success) {
       await prisma.message.update({
         where: { id: message.id },
         data: { status: 'SENT', sent_at: new Date() },
@@ -38,18 +38,18 @@ export async function sendMessage(customerId: string, type: 'SMS' | 'WHATSAPP', 
         where: { id: message.id },
         data: { status: 'FAILED' },
       });
-      return { success: false, messageId: message.id };
+      return { success: false, error: result.error, messageId: message.id };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error sending message:', error);
-    return { success: false, error };
+    return { success: false, error: error?.message || 'Unknown error sending message' };
   }
 }
 
-async function sendToProvider(type: string, body: string, to: string): Promise<boolean> {
+async function sendToProvider(type: string, body: string, to: string): Promise<{ success: boolean; error?: string }> {
   if (type !== 'SMS') {
     console.log(`Sending ${type} to ${to}: ${body} (simulated)`);
-    return true; // Only SMS is implemented with real provider
+    return { success: true };
   }
 
   try {
@@ -57,9 +57,12 @@ async function sendToProvider(type: string, body: string, to: string): Promise<b
     const clientId = 'vgtkpiui';
     const clientSecret = 'etmataoj';
     const from = 'LetsGo';
-    
-    // Ensure phone number is in correct format (e.g., removing leading 0 or adding country code if needed)
-    // Assuming 'to' is already in a compatible format or purely numeric
+
+    const smsApiUrl = process.env.SMS_API;
+    if (!smsApiUrl) {
+      console.error('SMS_API environment variable is not set');
+      return { success: false, error: 'SMS API URL not configured' };
+    }
     
     // Using URLSearchParams for proper encoding
     const params = new URLSearchParams({
@@ -70,22 +73,22 @@ async function sendToProvider(type: string, body: string, to: string): Promise<b
       content: body,
     });
 
-    const url = `https://sms.hubtel.com/v1/messages/send?${params.toString()}`;
+    const url = `${smsApiUrl}${params.toString()}`;
+    console.log('Sending SMS to:', to);
     
     const response = await fetch(url);
     
     if (response.ok) {
-        // Hubtel might return JSON, let's verify if needed, but for now 200 OK is success
         const data = await response.json().catch(() => ({})); 
-        // console.log('Hubtel response:', data);
-        return true;
+        console.log('Hubtel response:', data);
+        return { success: true };
     } else {
         const errorText = await response.text();
         console.error('Hubtel API Error:', response.status, errorText);
-        return false;
+        return { success: false, error: `Hubtel API error: ${response.status} - ${errorText}` };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to send SMS via Hubtel:', error);
-    return false;
+    return { success: false, error: `SMS send failed: ${error.message}` };
   }
 }

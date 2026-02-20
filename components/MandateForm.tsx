@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { mandateFormSchema } from '@/lib/validators';
@@ -13,7 +13,9 @@ type FormData = z.infer<typeof mandateFormSchema>;
 
 export default function MandateForm({ customerId, customerName }: { customerId: string, customerName: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [signatureData, setSignatureData] = useState('');
   const sigPad = useRef<SignatureCanvas>(null);
+  const sigContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   const {
@@ -36,16 +38,55 @@ export default function MandateForm({ customerId, customerName }: { customerId: 
     name: 'accounts',
   });
 
+  const resizeSignatureCanvas = useCallback(() => {
+    const canvasInstance = sigPad.current;
+    const container = sigContainerRef.current;
+
+    if (!canvasInstance || !container) return;
+
+    const { width, height } = container.getBoundingClientRect();
+    if (!width || !height) return;
+
+    const dataUrl = !canvasInstance.isEmpty()
+      ? canvasInstance.toDataURL()
+      : signatureData;
+
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    const canvas = canvasInstance.getCanvas();
+    canvas.width = width * ratio;
+    canvas.height = height * ratio;
+    const context = canvas.getContext('2d');
+    if (context) {
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    canvasInstance.clear();
+    if (dataUrl) {
+      canvasInstance.fromDataURL(dataUrl);
+    }
+  }, [signatureData]);
+
+  useEffect(() => {
+    resizeSignatureCanvas();
+
+    const container = sigContainerRef.current;
+    if (!container || typeof ResizeObserver === 'undefined') return;
+
+    const observer = new ResizeObserver(() => resizeSignatureCanvas());
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [resizeSignatureCanvas]);
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
       // Get signature data URL
-      const signatureData = sigPad.current?.toDataURL();
+      const signaturePayload = signatureData || sigPad.current?.toDataURL() || '';
       
       const response = await fetch('/api/mandates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, signature: signatureData, customerId }),
+        body: JSON.stringify({ ...data, signature: signaturePayload, customerId }),
       });
 
       if (!response.ok) {
@@ -63,13 +104,16 @@ export default function MandateForm({ customerId, customerName }: { customerId: 
 
   const clearSignature = () => {
     sigPad.current?.clear();
+    setSignatureData('');
     setValue('signature', '');
   };
 
   const saveSignature = () => {
-      if (sigPad.current && !sigPad.current.isEmpty()) {
-          setValue('signature', sigPad.current.toDataURL());
-      }
+    if (sigPad.current && !sigPad.current.isEmpty()) {
+      const dataUrl = sigPad.current.toDataURL();
+      setSignatureData(dataUrl);
+      setValue('signature', dataUrl);
+    }
   };
 
   return (
@@ -178,7 +222,7 @@ export default function MandateForm({ customerId, customerName }: { customerId: 
 
         <div className="border rounded-md p-4 bg-gray-50">
             <label className="block text-sm font-medium text-gray-700 mb-2">Digital Signature</label>
-            <div className="border border-gray-300 bg-white rounded cursor-crosshair" style={{ height: 200 }}>
+          <div ref={sigContainerRef} className="border border-gray-300 bg-white rounded cursor-crosshair" style={{ height: 200 }}>
                 <SignatureCanvas 
                     ref={sigPad}
                     penColor="black"
