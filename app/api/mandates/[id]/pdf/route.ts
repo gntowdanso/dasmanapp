@@ -22,8 +22,7 @@ export async function GET(
     }
 
     // Generate the PDF on-demand
-    const pdfDoc = generateMandatePDF(mandate);
-    const pdfArrayBuffer = pdfDoc.output('arraybuffer');
+    const pdfArrayBuffer = await generateMandatePDF(mandate);
 
     const filename = `Mandate_${mandate.customer.full_name.replace(/\s+/g, '_')}_${mandate.id.substring(0, 8)}.pdf`;
 

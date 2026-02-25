@@ -1,146 +1,147 @@
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { Customer, DirectDebitMandate, DirectDebitAccount } from '@prisma/client';
 import { decrypt } from './encryption';
+import fs from 'fs';
+import path from 'path';
+
+// Coordinate configuration for the PDF template (origin is bottom-left)
+// Adjust these values based on the "Digital DD Form.pdf" layout.
+const COORDS = {
+  customerName: { x: 150, y: 650 },
+  customerPhone: { x: 400, y: 650 },
+  ghanaCard: { x: 150, y: 620 },
+  date: { x: 450, y: 720 },
+  mandateRef: { x: 150, y: 720 },
+  
+  // Account 1
+  account1: {
+    bankName: { x: 80, y: 540 },
+    branch: { x: 250, y: 540 },
+    accountNumber: { x: 400, y: 540 },
+    accountName: { x: 80, y: 510 },
+  },
+
+  // Account 2 (if supported by template)
+  account2: {
+    bankName: { x: 80, y: 470 },
+    branch: { x: 250, y: 470 },
+    accountNumber: { x: 400, y: 470 },
+    accountName: { x: 80, y: 440 },
+  },
+
+  signature: { x: 100, y: 200, width: 100, height: 50 },
+  signedDate: { x: 100, y: 150 },
+  ipAddress: { x: 400, y: 150 },
+};
 
 /**
- * Generates a Direct Debit PDF for a given mandate.
+ * Generates a Direct Debit PDF using the "Digital DD Form.pdf" template.
  * @param mandate The mandate object including customer and accounts relations.
  */
-export function generateMandatePDF(mandate: DirectDebitMandate & { customer: Customer, accounts: DirectDebitAccount[] }) {
-  const doc = new jsPDF();
-  const PAGE_WIDTH = doc.internal.pageSize.getWidth();
-  const MARGIN = 15;
-  let yPos = 15;
-
-  // Letshego Green Header Bar
-  doc.setFillColor(0, 166, 81); // #00A651
-  doc.rect(0, 0, PAGE_WIDTH, 8, 'F');
-
-  // Company Name
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 166, 81);
-  doc.text('Letshego', MARGIN, yPos + 8);
-  doc.setFontSize(10);
-  doc.setTextColor(100, 100, 100);
-  doc.text('GHANA', MARGIN + 62, yPos + 8);
-
-  yPos += 18;
-
-  // Title
-  doc.setFontSize(16);
-  doc.setTextColor(33, 33, 33);
-  doc.text('DIRECT DEBIT MANDATE', PAGE_WIDTH / 2, yPos, { align: 'center' });
-  yPos += 8;
-
-  // Divider line
-  doc.setDrawColor(0, 166, 81);
-  doc.setLineWidth(0.5);
-  doc.line(MARGIN, yPos, PAGE_WIDTH - MARGIN, yPos);
-  yPos += 8;
+export async function generateMandatePDF(mandate: DirectDebitMandate & { customer: Customer, accounts: DirectDebitAccount[] }): Promise<Uint8Array> {
+  // Load the template
+  const templatePath = path.join(process.cwd(), 'public/mandateform/Digital DD Form.pdf');
   
-  doc.setFontSize(10);
-  doc.setTextColor(80, 80, 80);
-  doc.text('Mandate Reference: ' + mandate.id.substring(0, 8).toUpperCase(), MARGIN, yPos);
-  doc.text('Date: ' + (mandate.submitted_at ? new Date(mandate.submitted_at).toLocaleDateString() : new Date().toLocaleDateString()), PAGE_WIDTH - MARGIN, yPos, { align: 'right' });
-  yPos += 12;
-
-  // Customer Details
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.setTextColor(0, 166, 81);
-  doc.text('Customer Details', MARGIN, yPos);
-  yPos += 7;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(33, 33, 33);
-  doc.text(`Full Name: ${mandate.customer.full_name}`, MARGIN, yPos);
-  yPos += 6;
-  doc.text(`Phone: ${mandate.customer.phone_number}`, MARGIN, yPos);
-  yPos += 6;
-  const decryptedGha = decrypt(mandate.ghana_card_number); 
-  doc.text(`Ghana Card Number: ${decryptedGha}`, MARGIN, yPos);
-  yPos += 12;
-
-  // Account Details
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.setTextColor(0, 166, 81);
-  doc.text('Bank Account Information', MARGIN, yPos);
-  yPos += 5;
-
-  const tableSubHeaders = ['Account Type', 'Bank Name', 'Branch', 'Account Name', 'Account Number'];
-  const data = mandate.accounts.map(acc => [
-    acc.account_order,
-    acc.bank_name,
-    acc.branch,
-    acc.account_name,
-    decrypt(acc.account_number)
-  ]);
-
-  autoTable(doc, {
-    startY: yPos,
-    head: [tableSubHeaders],
-    body: data,
-    theme: 'grid',
-    headStyles: { fillColor: [0, 166, 81], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
-    bodyStyles: { fontSize: 9 },
-    alternateRowStyles: { fillColor: [240, 255, 245] },
-  });
-
-  yPos = (doc as any).lastAutoTable.finalY + 12;
-
-  // Mandate Agreement
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.setTextColor(0, 166, 81);
-  doc.text('Authorization', MARGIN, yPos);
-  yPos += 7;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(33, 33, 33);
-  const agreementText = "I/We hereby authorize you (the Bank) to debit my/our account with the amounts specified above. This mandate is to remain in force until cancelled by me/us in writing.";
-  doc.text(doc.splitTextToSize(agreementText, PAGE_WIDTH - 2 * MARGIN), MARGIN, yPos);
-  
-  yPos += 18;
-
-  // Signature
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(33, 33, 33);
-  doc.text('Digital Signature:', MARGIN, yPos);
-  yPos += 4;
-
-  if (mandate.digital_signature_path && mandate.digital_signature_path.startsWith('data:image')) {
-    try {
-        doc.addImage(mandate.digital_signature_path, 'PNG', MARGIN, yPos, 60, 25);
-        yPos += 28;
-    } catch (e) {
-        doc.text("[Signature could not be rendered]", MARGIN, yPos + 5);
-        yPos += 10;
-    }
-  } else if (mandate.digital_signature_path) {
-      doc.text("[Digital Signature on file]", MARGIN, yPos + 5);
-      yPos += 10;
-  } else {
-      doc.text("Signature: __________________________", MARGIN, yPos + 5);
-      yPos += 10;
+  if (!fs.existsSync(templatePath)) {
+    throw new Error(`PDF Template not found at: ${templatePath}`);
   }
+
+  const templateBytes = fs.readFileSync(templatePath);
+  const pdfDoc = await PDFDocument.load(templateBytes);
+  const pages = pdfDoc.getPages();
+  const firstPage = pages[0];
   
-  yPos += 8;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text(`Signed Date: ${mandate.submitted_at ? new Date(mandate.submitted_at).toLocaleDateString() : 'N/A'}`, MARGIN, yPos);
-  doc.text(`IP Address: ${mandate.ip_address || 'N/A'}`, PAGE_WIDTH - MARGIN, yPos, { align: 'right' });
+  // Embed font
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontSize = 10;
+  const color = rgb(0, 0, 0); // Black
 
-  // Footer bar
-  const pageHeight = doc.internal.pageSize.getHeight();
-  doc.setFillColor(0, 166, 81);
-  doc.rect(0, pageHeight - 12, PAGE_WIDTH, 12, 'F');
-  doc.setFontSize(7);
-  doc.setTextColor(255, 255, 255);
-  doc.text('Letshego Ghana Savings and Loans PLC | Direct Debit Mandate System', PAGE_WIDTH / 2, pageHeight - 5, { align: 'center' });
+  // Helper to draw text
+  const drawText = (text: string | null | undefined, x: number, y: number) => {
+    if (!text) return;
+    firstPage.drawText(text, { x, y, size: fontSize, font, color });
+  };
 
-  return doc;
+  // Draw Customer Details
+  drawText(mandate.customer.full_name, COORDS.customerName.x, COORDS.customerName.y);
+  drawText(mandate.customer.phone_number, COORDS.customerPhone.x, COORDS.customerPhone.y);
+  
+  // Decrypt Ghana Card
+  const decryptedGha = decrypt(mandate.ghana_card_number);
+  drawText(decryptedGha, COORDS.ghanaCard.x, COORDS.ghanaCard.y);
+
+  // Draw Meta Info
+  const submissionDate = mandate.submitted_at ? new Date(mandate.submitted_at).toLocaleDateString() : new Date().toLocaleDateString();
+  drawText(submissionDate, COORDS.date.x, COORDS.date.y);
+  drawText(mandate.id.substring(0, 8).toUpperCase(), COORDS.mandateRef.x, COORDS.mandateRef.y);
+
+  // Draw Account Details (Support up to 2 accounts for now based on template guess)
+  if (mandate.accounts.length > 0) {
+    const acc1 = mandate.accounts[0];
+    drawText(acc1.bank_name, COORDS.account1.bankName.x, COORDS.account1.bankName.y);
+    drawText(acc1.branch, COORDS.account1.branch.x, COORDS.account1.branch.y);
+    drawText(decrypt(acc1.account_number), COORDS.account1.accountNumber.x, COORDS.account1.accountNumber.y); // Decrypt account number
+    drawText(acc1.account_name, COORDS.account1.accountName.x, COORDS.account1.accountName.y);
+  }
+
+  if (mandate.accounts.length > 1) {
+    const acc2 = mandate.accounts[1];
+    drawText(acc2.bank_name, COORDS.account2.bankName.x, COORDS.account2.bankName.y);
+    drawText(acc2.branch, COORDS.account2.branch.x, COORDS.account2.branch.y);
+    drawText(decrypt(acc2.account_number), COORDS.account2.accountNumber.x, COORDS.account2.accountNumber.y); // Decrypt account number
+    drawText(acc2.account_name, COORDS.account2.accountName.x, COORDS.account2.accountName.y);
+  }
+
+  // Draw Signature
+  if (mandate.digital_signature_path) {
+    try {
+      let imageBytes: Uint8Array | undefined;
+      let format: 'png' | 'jpg' | undefined;
+
+      if (mandate.digital_signature_path.startsWith('data:image/png;base64,')) {
+        const base64Data = mandate.digital_signature_path.replace('data:image/png;base64,', '');
+        imageBytes = Buffer.from(base64Data, 'base64');
+        format = 'png';
+      } else if (mandate.digital_signature_path.startsWith('data:image/jpeg;base64,')) {
+         const base64Data = mandate.digital_signature_path.replace('data:image/jpeg;base64,', '');
+         imageBytes = Buffer.from(base64Data, 'base64');
+         format = 'jpg';
+      } else if (fs.existsSync(mandate.digital_signature_path)) {
+          // It's a file path
+          imageBytes = fs.readFileSync(mandate.digital_signature_path);
+          if (mandate.digital_signature_path.endsWith('.png')) format = 'png';
+          if (mandate.digital_signature_path.endsWith('.jpg') || mandate.digital_signature_path.endsWith('.jpeg')) format = 'jpg';
+      }
+
+      if (imageBytes && format) {
+        let embeddedImage;
+        if (format === 'png') {
+            embeddedImage = await pdfDoc.embedPng(imageBytes);
+        } else {
+            embeddedImage = await pdfDoc.embedJpg(imageBytes);
+        }
+        
+        firstPage.drawImage(embeddedImage, {
+            x: COORDS.signature.x,
+            y: COORDS.signature.y,
+            width: COORDS.signature.width,
+            height: COORDS.signature.height,
+        });
+      } else {
+        drawText("[Signature Image Not Found]", COORDS.signature.x, COORDS.signature.y);
+      }
+    } catch (e) {
+      console.error("Error embedding signature:", e);
+      drawText("[Error embedding signature]", COORDS.signature.x, COORDS.signature.y);
+    }
+  } else {
+      // No digital signature
+      drawText("__________________________", COORDS.signature.x, COORDS.signature.y);
+  }
+
+  // Draw Metadata
+  drawText(`Signed Date: ${submissionDate}`, COORDS.signedDate.x, COORDS.signedDate.y);
+  drawText(`IP: ${mandate.ip_address || 'N/A'}`, COORDS.ipAddress.x, COORDS.ipAddress.y);
+
+  return await pdfDoc.save();
 }
