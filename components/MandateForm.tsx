@@ -119,6 +119,22 @@ export default function MandateForm({ customerId, customerName }: { customerId: 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       
+      {/* Logo */}
+      <div className="flex justify-center mb-4">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo/logo_0.png" alt="Company Logo" className="h-16 object-contain" />
+      </div>
+
+      {/* Intro Text from Mandate Form */}
+      <div className="bg-gray-50 p-6 rounded shadow border border-gray-200 text-sm text-gray-800 leading-relaxed">
+        <p className="font-bold mb-2">Dear Sir/Madam,</p>
+        <p>
+            I/We hereby request, instruct and authorize you to debit my/our account with the amounts specified below 
+            and transfer the same to the account of Letshego Ghana Savings and Loans PLC. 
+            This mandate is to remain in force until cancelled by me/us in writing.
+        </p>
+      </div>
+
       {/* Customer Details Section */}
       <section className="bg-white p-6 rounded shadow border border-gray-100">
         <h2 className="text-xl font-semibold mb-4 text-gray-800">1. Customer Information</h2>

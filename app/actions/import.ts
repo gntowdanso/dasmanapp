@@ -15,6 +15,20 @@ export async function importCustomersAction(customers: any[]) {
             const externalId = customer['Customer No'];
             const loanStatus = customer['Status'];
             const mobile = customer['Mobile'];
+            
+            // New fields
+            const loanBalance = customer['Loan Balance'];
+            const monthlyRepayment = customer['Monthly Repayment'];
+            const startDateRaw = customer['Start Date'];
+            const noOfMonths = customer['No of Months'];
+
+            let startDate: Date | undefined;
+            if (startDateRaw) {
+                const parsedDate = new Date(startDateRaw);
+                if (!isNaN(parsedDate.getTime())) {
+                    startDate = parsedDate;
+                }
+            }
 
             if (!fullName || !mobile) {
                 continue;
@@ -36,6 +50,10 @@ export async function importCustomersAction(customers: any[]) {
                         phone_number: String(mobile),
                         account_number: accountNo ? String(accountNo) : null,
                         loan_status: loanStatus ? String(loanStatus) : null,
+                        loan_balance: loanBalance ? String(loanBalance) : null,
+                        monthly_repayment: monthlyRepayment ? String(monthlyRepayment) : null,
+                        start_date: startDate,
+                        no_of_months: noOfMonths ? Number(noOfMonths) : null,
                     }
                 });
             } else {
@@ -50,6 +68,10 @@ export async function importCustomersAction(customers: any[]) {
                         account_number: accountNo ? String(accountNo) : null,
                         external_id: externalId ? String(externalId) : null,
                         loan_status: loanStatus ? String(loanStatus) : null,
+                        loan_balance: loanBalance ? String(loanBalance) : null,
+                        monthly_repayment: monthlyRepayment ? String(monthlyRepayment) : null,
+                        start_date: startDate,
+                        no_of_months: noOfMonths ? Number(noOfMonths) : null,
                         session_token: token,
                         token_expiry: expiry,
                         status: 'PENDING',

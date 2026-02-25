@@ -51,7 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Logo */}
           <div className="p-6 border-b border-blue-800">
             <div className="flex items-center gap-3">
-              <img src="/letshego-logo.svg" alt="Letshego Ghana" className="h-10 bg-white rounded-md px-2 py-1" />
+              <img src="/logo/logo_0.png" alt="Letshego Ghana" className="h-10 bg-white rounded-md px-2 py-1" />
             </div>
             {/* Close button for mobile */}
             <button 

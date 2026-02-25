@@ -7,12 +7,21 @@ import path from 'path';
 // Coordinate configuration for the PDF template (origin is bottom-left)
 // Adjust these values based on the "Digital DD Form.pdf" layout.
 const COORDS = {
+  logo: { x: 50, y: 750, width: 100, height: 40 }, // Replace 'COMPANY NAME AND LOGO' position
+  
   customerName: { x: 150, y: 650 },
   customerPhone: { x: 400, y: 650 },
   ghanaCard: { x: 150, y: 620 },
   date: { x: 450, y: 720 },
   mandateRef: { x: 150, y: 720 },
-  
+
+  // New Customer Fields (fill "....." placeholders)
+  // Adjust these coordinates to match the form lines
+  loanBalance: { x: 150, y: 580 },
+  monthlyRepayment: { x: 400, y: 580 },
+  startDate: { x: 150, y: 560 }, // "commencing on _"
+  noOfMonths: { x: 400, y: 560 }, // "ending on _" or "number of months"
+
   // Account 1
   account1: {
     bankName: { x: 80, y: 540 },
@@ -32,6 +41,10 @@ const COORDS = {
   signature: { x: 100, y: 200, width: 100, height: 50 },
   signedDate: { x: 100, y: 150 },
   ipAddress: { x: 400, y: 150 },
+  
+  meta: {
+      generatedDate: { x: 480, y: 50 }
+  }
 };
 
 /**
@@ -41,6 +54,7 @@ const COORDS = {
 export async function generateMandatePDF(mandate: DirectDebitMandate & { customer: Customer, accounts: DirectDebitAccount[] }): Promise<Uint8Array> {
   // Load the template
   const templatePath = path.join(process.cwd(), 'public/mandateform/Digital DD Form.pdf');
+  const logoPath = path.join(process.cwd(), 'public/logo/logo_0.png');
   
   if (!fs.existsSync(templatePath)) {
     throw new Error(`PDF Template not found at: ${templatePath}`);
@@ -56,15 +70,33 @@ export async function generateMandatePDF(mandate: DirectDebitMandate & { custome
   const fontSize = 10;
   const color = rgb(0, 0, 0); // Black
 
+  // Embed Logo
+  if (fs.existsSync(logoPath)) {
+      const logoBytes = fs.readFileSync(logoPath);
+      const logoImage = await pdfDoc.embedPng(logoBytes); // Assuming PNG based on filename
+      firstPage.drawImage(logoImage, {
+        x: COORDS.logo.x,
+        y: COORDS.logo.y,
+        width: COORDS.logo.width,
+        height: COORDS.logo.height,
+      });
+  }
+
   // Helper to draw text
   const drawText = (text: string | null | undefined, x: number, y: number) => {
     if (!text) return;
-    firstPage.drawText(text, { x, y, size: fontSize, font, color });
+    firstPage.drawText(String(text), { x, y, size: fontSize, font, color });
   };
 
   // Draw Customer Details
   drawText(mandate.customer.full_name, COORDS.customerName.x, COORDS.customerName.y);
   drawText(mandate.customer.phone_number, COORDS.customerPhone.x, COORDS.customerPhone.y);
+  
+  // Draw New Customer Fields
+  drawText(mandate.customer.loan_balance, COORDS.loanBalance.x, COORDS.loanBalance.y);
+  drawText(mandate.customer.monthly_repayment, COORDS.monthlyRepayment.x, COORDS.monthlyRepayment.y);
+  drawText(mandate.customer.start_date ? new Date(mandate.customer.start_date).toLocaleDateString() : '', COORDS.startDate.x, COORDS.startDate.y);
+  drawText(mandate.customer.no_of_months ? String(mandate.customer.no_of_months) : '', COORDS.noOfMonths.x, COORDS.noOfMonths.y);
   
   // Decrypt Ghana Card
   const decryptedGha = decrypt(mandate.ghana_card_number);
