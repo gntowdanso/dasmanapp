@@ -59,7 +59,7 @@ export default function ImportPage() {
     };
 
     const downloadTemplate = () => {
-        const csvContent = 'Name,Account no,Customer No,Status,Mobile\nEDNA MARBELL,2050627283,1200153755,Write Off,233249000000\nADAMS KYEI,1200509266,2050062847,Write Off,233245000000';
+        const csvContent = 'Name,Account no,Customer No,Status,Mobile,Loan Balance,Monthly Repayment,Start Date,No of Months\nEDNA MARBELL,2050627283,1200153755,Write Off,233249000000,5000.00,450.00,2025-01-01,12\nADAMS KYEI,1200509266,2050062847,Write Off,233245000000,10000.00,900.00,2025-02-15,24';
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
