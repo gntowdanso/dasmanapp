@@ -7,43 +7,48 @@ import path from 'path';
 // Coordinate configuration for the PDF template (origin is bottom-left)
 // Adjust these values based on the "Digital DD Form.pdf" layout.
 const COORDS = {
-  logo: { x: 50, y: 750, width: 100, height: 40 }, // Replace 'COMPANY NAME AND LOGO' position
+  // 1. Logo Position (Replaces 'COMPANY NAME AND LOGO')
+  logo: { x: 40, y: 740, width: 120, height: 60 }, 
+
+  // Customer Details
+  customerName: { x: 140, y: 652 },
+  customerPhone: { x: 400, y: 652 },
+  ghanaCard: { x: 140, y: 628 }, // Adjusted slightly
   
-  customerName: { x: 150, y: 650 },
-  customerPhone: { x: 400, y: 650 },
-  ghanaCard: { x: 150, y: 620 },
-  date: { x: 450, y: 720 },
-  mandateRef: { x: 150, y: 720 },
+  // Date and Ref
+  date: { x: 460, y: 715 },
+  mandateRef: { x: 140, y: 715 },
 
   // New Customer Fields (fill "....." placeholders)
-  // Adjust these coordinates to match the form lines
-  loanBalance: { x: 150, y: 580 },
-  monthlyRepayment: { x: 400, y: 580 },
-  startDate: { x: 150, y: 560 }, // "commencing on _"
-  noOfMonths: { x: 400, y: 560 }, // "ending on _" or "number of months"
+  // Loan Amount / Balance - typically first line of financial details
+  loanBalance: { x: 140, y: 585 }, 
+  monthlyRepayment: { x: 400, y: 585 },
+  
+  // Duration details
+  startDate: { x: 140, y: 562 }, // "commencing on _"
+  noOfMonths: { x: 340, y: 562 }, // "ending on _" or "number of months"
 
-  // Account 1
+  // Account 1 (Bank Details)
   account1: {
-    bankName: { x: 80, y: 540 },
-    branch: { x: 250, y: 540 },
-    accountNumber: { x: 400, y: 540 },
-    accountName: { x: 80, y: 510 },
+    bankName: { x: 85, y: 512 },
+    branch: { x: 260, y: 512 },
+    accountNumber: { x: 400, y: 512 },
+    accountName: { x: 85, y: 485 }, // Account Name is often below or above
   },
 
-  // Account 2 (if supported by template)
+  // Account 2 (filled if exists)
   account2: {
-    bankName: { x: 80, y: 470 },
-    branch: { x: 250, y: 470 },
-    accountNumber: { x: 400, y: 470 },
-    accountName: { x: 80, y: 440 },
+    bankName: { x: 85, y: 440 },
+    branch: { x: 260, y: 440 },
+    accountNumber: { x: 400, y: 440 },
+    accountName: { x: 85, y: 410 },
   },
 
-  signature: { x: 100, y: 200, width: 100, height: 50 },
-  signedDate: { x: 100, y: 150 },
-  ipAddress: { x: 400, y: 150 },
+  signature: { x: 80, y: 200, width: 120, height: 60 },
+  signedDate: { x: 380, y: 220 }, // Date next to signature
   
   meta: {
-      generatedDate: { x: 480, y: 50 }
+      generatedDate: { x: 480, y: 30 }
   }
 };
 
@@ -92,10 +97,13 @@ export async function generateMandatePDF(mandate: DirectDebitMandate & { custome
   drawText(mandate.customer.full_name, COORDS.customerName.x, COORDS.customerName.y);
   drawText(mandate.customer.phone_number, COORDS.customerPhone.x, COORDS.customerPhone.y);
   
-  // Draw New Customer Fields
-  drawText(mandate.customer.loan_balance, COORDS.loanBalance.x, COORDS.loanBalance.y);
-  drawText(mandate.customer.monthly_repayment, COORDS.monthlyRepayment.x, COORDS.monthlyRepayment.y);
-  drawText(mandate.customer.start_date ? new Date(mandate.customer.start_date).toLocaleDateString() : '', COORDS.startDate.x, COORDS.startDate.y);
+  // Format Date for Start Date
+  const startD = mandate.customer.start_date ? new Date(mandate.customer.start_date).toLocaleDateString() : '';
+
+  // Draw New Customer Fields (Filling placeholders)
+  drawText(mandate.customer.loan_balance ? String(mandate.customer.loan_balance) : '', COORDS.loanBalance.x, COORDS.loanBalance.y);
+  drawText(mandate.customer.monthly_repayment ? String(mandate.customer.monthly_repayment) : '', COORDS.monthlyRepayment.x, COORDS.monthlyRepayment.y);
+  drawText(startD, COORDS.startDate.x, COORDS.startDate.y);
   drawText(mandate.customer.no_of_months ? String(mandate.customer.no_of_months) : '', COORDS.noOfMonths.x, COORDS.noOfMonths.y);
   
   // Decrypt Ghana Card
@@ -153,12 +161,21 @@ export async function generateMandatePDF(mandate: DirectDebitMandate & { custome
             embeddedImage = await pdfDoc.embedJpg(imageBytes);
         }
         
+        // Scale signature
+        const dims = embeddedImage.scale(0.5);
+        // Ensure it fits within box
+        const width = Math.min(dims.width, COORDS.signature.width);
+        const height = Math.min(dims.height, COORDS.signature.height);
+
         firstPage.drawImage(embeddedImage, {
             x: COORDS.signature.x,
             y: COORDS.signature.y,
-            width: COORDS.signature.width,
-            height: COORDS.signature.height,
+            width: width,
+            height: height,
         });
+
+        // Add Signature Date
+        drawText(submissionDate, COORDS.signedDate.x, COORDS.signedDate.y);
       } else {
         drawText("[Signature Image Not Found]", COORDS.signature.x, COORDS.signature.y);
       }

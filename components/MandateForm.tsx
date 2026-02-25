@@ -11,7 +11,20 @@ import { useRouter } from 'next/navigation';
 
 type FormData = z.infer<typeof mandateFormSchema>;
 
-export default function MandateForm({ customerId, customerName }: { customerId: string, customerName: string }) {
+export default function MandateForm({ 
+  customerId, 
+  customerName,
+  loanDetails 
+}: { 
+  customerId: string; 
+  customerName: string;
+  loanDetails?: {
+    balance?: string | null;
+    monthlyRepayment?: string | null;
+    startDate?: Date | null;
+    noOfMonths?: number | null;
+  }
+}) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [signatureData, setSignatureData] = useState('');
   const sigPad = useRef<SignatureCanvas>(null);
@@ -134,6 +147,38 @@ export default function MandateForm({ customerId, customerName }: { customerId: 
             This mandate is to remain in force until cancelled by me/us in writing.
         </p>
       </div>
+
+      {loanDetails && (
+        <section className="bg-white p-6 rounded shadow border border-gray-100 pb-2">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Loan Details</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+                {loanDetails.balance && (
+                    <div>
+                        <span className="font-semibold block">Loan Balance:</span>
+                        <span>{loanDetails.balance}</span>
+                    </div>
+                )}
+                {loanDetails.monthlyRepayment && (
+                    <div>
+                        <span className="font-semibold block">Monthly Repayment:</span>
+                        <span>{loanDetails.monthlyRepayment}</span>
+                    </div>
+                )}
+                {loanDetails.startDate && (
+                    <div>
+                        <span className="font-semibold block">Start Date:</span>
+                        <span>{new Date(loanDetails.startDate).toLocaleDateString()}</span>
+                    </div>
+                )}
+                {loanDetails.noOfMonths && (
+                    <div>
+                        <span className="font-semibold block">Duration (Months):</span>
+                        <span>{loanDetails.noOfMonths}</span>
+                    </div>
+                )}
+            </div>
+        </section>
+      )}
 
       {/* Customer Details Section */}
       <section className="bg-white p-6 rounded shadow border border-gray-100">

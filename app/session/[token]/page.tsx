@@ -41,7 +41,16 @@ export default async function SessionPage({ params }: { params: Promise<{ token:
           Please complete the form below to authorize direct debit payments.
         </p>
         
-        <MandateForm customerId={customer.id} customerName={customer.full_name} />
+        <MandateForm 
+          customerId={customer.id} 
+          customerName={customer.full_name}
+          loanDetails={{
+            balance: customer.loan_balance,
+            monthlyRepayment: customer.monthly_repayment,
+            startDate: customer.start_date,
+            noOfMonths: customer.no_of_months
+          }}
+        />
       </div>
     </div>
   );
