@@ -9,6 +9,10 @@ type MandateRow = {
   submittedAt: string;
   customerName: string;
   customerPhone: string;
+  customerLoanBalance?: string | null;
+  customerMonthlyRepayment?: string | null;
+  customerStartDate?: string | null;
+  customerNoOfMonths?: number | null;
   customerId: string;
   accountCount: number;
   hasPDF: boolean;
@@ -83,10 +87,26 @@ export default function DownloadMandatesPage() {
     const filtered = filteredMandates;
     if (filtered.length === 0) return;
 
-    const headers = ['Customer Name', 'Phone Number', 'Accounts', 'Submitted Date', 'IP Address', 'Mandate ID'];
+    const headers = [
+      'Customer Name', 
+      'Phone Number', 
+      'Loan Balance',
+      'Monthly Repayment',
+      'Start Date',
+      'No of Months',
+      'Accounts', 
+      'Submitted Date', 
+      'IP Address', 
+      'Mandate ID'
+    ];
+    
     const rows = filtered.map((m) => [
       m.customerName,
       m.customerPhone,
+      m.customerLoanBalance || '',
+      m.customerMonthlyRepayment || '',
+      m.customerStartDate ? new Date(m.customerStartDate).toLocaleDateString() : '',
+      m.customerNoOfMonths?.toString() || '',
       m.accountCount.toString(),
       new Date(m.submittedAt).toLocaleString(),
       m.ipAddress || 'N/A',

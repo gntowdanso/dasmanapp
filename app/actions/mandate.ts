@@ -21,6 +21,12 @@ export async function getSubmittedMandates() {
     submittedAt: m.submitted_at.toISOString(),
     customerName: m.customer.full_name,
     customerPhone: m.customer.phone_number,
+    // Add new fields
+    customerLoanBalance: m.customer.loan_balance,
+    customerMonthlyRepayment: m.customer.monthly_repayment,
+    customerStartDate: m.customer.start_date ? m.customer.start_date.toISOString() : null,
+    customerNoOfMonths: m.customer.no_of_months,
+    
     customerId: m.customer.id,
     accountCount: m.accounts.length,
     hasPDF: m.generatedPDFs.length > 0,
