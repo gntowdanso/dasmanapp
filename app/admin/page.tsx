@@ -50,13 +50,28 @@ function StatCard({
 }
 
 export default async function AdminDashboard() {
-  const [customers, stats] = await Promise.all([
-    prisma.customer.findMany({
-      orderBy: { created_at: 'desc' },
-      take: 20,
-    }),
-    getDashboardStats()
-  ]);
+  let customers = [];
+  let stats = { 
+    customers: { total: 0, today: 0, month: 0, year: 0 }, 
+    sms: { total: 0, today: 0, month: 0, year: 0 }, 
+    mandates: { total: 0, today: 0, month: 0, year: 0 } 
+  };
+
+  try {
+    const [fetchedCustomers, fetchedStats] = await Promise.all([
+      prisma.customer.findMany({
+        orderBy: { created_at: 'desc' },
+        take: 20,
+      }),
+      getDashboardStats()
+    ]);
+    
+    customers = fetchedCustomers;
+    stats = fetchedStats;
+  } catch (error) {
+    console.error("Dashboard data fetch error:", error);
+    // Silent fail or partial data - stats are already init to zero
+  }
 
   async function createCustomer(formData: FormData) {
     'use server';

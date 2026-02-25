@@ -11,35 +11,46 @@ export async function getDashboardStats() {
 
     // Helper to get counts for different time ranges
     async function getCounts(model: any, dateField: string, additionalWhere: any = {}) {
-        const [total, todayCount, monthCount, yearCount] = await Promise.all([
-            model.count({ where: additionalWhere }),
-            model.count({
-                where: {
-                    ...additionalWhere,
-                    [dateField]: {
-                        gte: today
+        try {
+            if (!model) {
+                console.error(`Model is undefined for dateField: ${dateField}`);
+                return { total: 0, today: 0, month: 0, year: 0 };
+            }
+
+            const [total, todayCount, monthCount, yearCount] = await Promise.all([
+                model.count({ where: additionalWhere }),
+                model.count({
+                    where: {
+                        ...additionalWhere,
+                        [dateField]: {
+                            gte: today
+                        }
                     }
-                }
-            }),
-            model.count({
-                where: {
-                    ...additionalWhere,
-                    [dateField]: {
-                        gte: thisMonth
+                }),
+                model.count({
+                    where: {
+                        ...additionalWhere,
+                        [dateField]: {
+                            gte: thisMonth
+                        }
                     }
-                }
-            }),
-            model.count({
-                where: {
-                    ...additionalWhere,
-                    [dateField]: {
-                        gte: thisYear
+                }),
+                model.count({
+                    where: {
+                        ...additionalWhere,
+                        [dateField]: {
+                            gte: thisYear
+                        }
                     }
-                }
-            })
-        ]);
-        
-        return { total, today: todayCount, month: monthCount, year: yearCount };
+                })
+            ]);
+            
+            return { total, today: todayCount, month: monthCount, year: yearCount };
+        } catch (error) {
+            console.error(`Error fetching counts for ${dateField}:`, error);
+            // Return zeros on error
+            return { total: 0, today: 0, month: 0, year: 0 };
+        }
     }
 
     const customers = await getCounts(prisma.customer, 'created_at');

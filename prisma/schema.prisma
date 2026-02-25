@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "library"
 }
 
@@ -11,89 +11,89 @@ datasource db {
 }
 
 model AdminUser {
-  id            String      @id @default(uuid())
+  id            String   @id @default(uuid())
   name          String
-  email         String      @unique
+  email         String   @unique
   password_hash String
-  role          String      // e.g., "SUPER_ADMIN", "EDITOR"
-  created_at    DateTime    @default(now())
-  
-  auditLogs     AuditLog[]
+  role          String // e.g., "SUPER_ADMIN", "EDITOR"
+  created_at    DateTime @default(now())
+
+  auditLogs AuditLog[]
 }
 
 model Customer {
-  id             String      @id @default(uuid())
+  id             String  @id @default(uuid())
   full_name      String
   phone_number   String
   account_number String?
-  external_id    String?     // 'Customer No' from import
-  loan_status    String?     // 'Status' from import, e.g., "Write Off"
-  
+  external_id    String? // 'Customer No' from import
+  loan_status    String? // 'Status' from import, e.g., "Write Off"
+
   // New fields
   loan_balance      String?
   monthly_repayment String?
   start_date        DateTime?
   no_of_months      Int?
 
-  session_token  String?     @unique
-  token_expiry   DateTime?
-  status         String      // "PENDING", "SUBMITTED", "EXPIRED" - Mandate status
-  created_at     DateTime    @default(now())
-  
-  mandates       DirectDebitMandate[]
-  messages       Message[]
+  session_token String?   @unique
+  token_expiry  DateTime?
+  status        String // "PENDING", "SUBMITTED", "EXPIRED" - Mandate status
+  created_at    DateTime  @default(now())
+
+  mandates DirectDebitMandate[]
+  messages Message[]
 }
 
 model DirectDebitMandate {
-  id                     String    @id @default(uuid())
-  customer               Customer  @relation(fields: [customer_id], references: [id])
+  id                     String   @id @default(uuid())
+  customer               Customer @relation(fields: [customer_id], references: [id])
   customer_id            String
-  ghana_card_number      String    // Encrypted
+  ghana_card_number      String // Encrypted
   agreement_accepted     Boolean
   digital_signature_path String?
-  submitted_at           DateTime  @default(now())
+  submitted_at           DateTime @default(now())
   ip_address             String?
-  
-  accounts               DirectDebitAccount[]
-  generatedPDFs          GeneratedPDF[]
+
+  accounts      DirectDebitAccount[]
+  generatedPDFs GeneratedPDF[]
 }
 
 model DirectDebitAccount {
-  id             String    @id @default(uuid())
+  id             String             @id @default(uuid())
   mandate_id     String
   mandate        DirectDebitMandate @relation(fields: [mandate_id], references: [id])
-  account_order  String    // "1ST", "2ND", "3RD"
+  account_order  String // "1ST", "2ND", "3RD"
   bank_name      String
   branch         String
   account_name   String
-  account_number String    // Encrypted
+  account_number String // Encrypted
 }
 
 model Message {
-  id                  String    @id @default(uuid())
+  id                  String   @id @default(uuid())
   customer_id         String
-  customer            Customer  @relation(fields: [customer_id], references: [id])
-  type                String    // "SMS", "WHATSAPP"
+  customer            Customer @relation(fields: [customer_id], references: [id])
+  type                String // "SMS", "WHATSAPP"
   message_body        String
-  status              String    // "SENT", "FAILED"
+  status              String // "SENT", "FAILED"
   provider_message_id String?
-  sent_at             DateTime  @default(now())
+  sent_at             DateTime @default(now())
 }
 
 model GeneratedPDF {
-  id           String    @id @default(uuid())
+  id           String             @id @default(uuid())
   mandate_id   String
   mandate      DirectDebitMandate @relation(fields: [mandate_id], references: [id])
   file_path    String
-  generated_at DateTime  @default(now())
+  generated_at DateTime           @default(now())
 }
 
 model AuditLog {
-  id          String    @id @default(uuid())
-  admin_id    String?
-  admin       AdminUser? @relation(fields: [admin_id], references: [id])
-  action      String
-  metadata    String?   // JSON string
-  timestamp   DateTime  @default(now())
-  ip_address  String?
+  id         String     @id @default(uuid())
+  admin_id   String?
+  admin      AdminUser? @relation(fields: [admin_id], references: [id])
+  action     String
+  metadata   String? // JSON string
+  timestamp  DateTime   @default(now())
+  ip_address String?
 }
