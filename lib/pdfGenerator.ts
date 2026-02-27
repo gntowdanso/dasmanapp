@@ -8,44 +8,47 @@ import path from 'path';
 // Adjust these values based on the "Digital DD Form.pdf" layout.
 const COORDS = {
   // 1. Logo Position (Replaces 'COMPANY NAME AND LOGO')
-  logo: { x: 40, y: 740, width: 120, height: 60 }, 
+  // Shifted slightly to better cover text
+  logo: { x: 45, y: 735, width: 130, height: 50 }, 
 
   // Customer Details
-  customerName: { x: 140, y: 652 },
-  customerPhone: { x: 400, y: 652 },
-  ghanaCard: { x: 140, y: 628 }, // Adjusted slightly
+  // Adjusted based on "fill in all ... placeholders" - likely need alignment
+  customerName: { x: 160, y: 648 },
+  customerPhone: { x: 420, y: 648 },
+  ghanaCard: { x: 160, y: 625 }, 
   
-  // Date and Ref
-  date: { x: 460, y: 715 },
-  mandateRef: { x: 140, y: 715 },
+  // Date and Ref (Typically top right)
+  date: { x: 450, y: 710 },
+  mandateRef: { x: 160, y: 710 },
 
-  // New Customer Fields (fill "....." placeholders)
-  // Loan Amount / Balance - typically first line of financial details
-  loanBalance: { x: 140, y: 585 }, 
-  monthlyRepayment: { x: 400, y: 585 },
+  // Financial Details
+  // "Loan Balance" ... "Monthly Repayment"
+  loanBalance: { x: 160, y: 582 }, 
+  monthlyRepayment: { x: 420, y: 582 },
   
-  // Duration details
-  startDate: { x: 140, y: 562 }, // "commencing on _"
-  noOfMonths: { x: 340, y: 562 }, // "ending on _" or "number of months"
+  // Duration details "commencing on" ... "ending on / no of months"
+  startDate: { x: 160, y: 558 }, 
+  noOfMonths: { x: 380, y: 558 }, 
 
   // Account 1 (Bank Details)
+  // "below the bank details side" -> Suggests these need to be lower
   account1: {
-    bankName: { x: 85, y: 512 },
-    branch: { x: 260, y: 512 },
-    accountNumber: { x: 400, y: 512 },
-    accountName: { x: 85, y: 485 }, // Account Name is often below or above
+    bankName: { x: 100, y: 495 },      // Shifted down from 512
+    branch: { x: 280, y: 495 },        // Shifted down
+    accountNumber: { x: 420, y: 495 }, // Shifted down
+    accountName: { x: 100, y: 465 },   // Shifted down from 485
   },
 
-  // Account 2 (filled if exists)
+  // Account 2
   account2: {
-    bankName: { x: 85, y: 440 },
-    branch: { x: 260, y: 440 },
-    accountNumber: { x: 400, y: 440 },
-    accountName: { x: 85, y: 410 },
+    bankName: { x: 100, y: 425 },
+    branch: { x: 280, y: 425 },
+    accountNumber: { x: 420, y: 425 },
+    accountName: { x: 100, y: 395 },
   },
 
-  signature: { x: 80, y: 200, width: 120, height: 60 },
-  signedDate: { x: 380, y: 220 }, // Date next to signature
+  signature: { x: 100, y: 200, width: 120, height: 60 },
+  signedDate: { x: 380, y: 220 },
   
   meta: {
       generatedDate: { x: 480, y: 30 }
@@ -77,8 +80,17 @@ export async function generateMandatePDF(mandate: DirectDebitMandate & { custome
 
   // Embed Logo
   if (fs.existsSync(logoPath)) {
+      // Draw white rectangle to cover placeholders like 'COMPANY NAME AND LOGO'
+      firstPage.drawRectangle({
+        x: COORDS.logo.x,
+        y: COORDS.logo.y,
+        width: COORDS.logo.width,
+        height: COORDS.logo.height,
+        color: rgb(1, 1, 1), // White
+      });
+
       const logoBytes = fs.readFileSync(logoPath);
-      const logoImage = await pdfDoc.embedPng(logoBytes); // Assuming PNG based on filename
+      const logoImage = await pdfDoc.embedPng(logoBytes); 
       firstPage.drawImage(logoImage, {
         x: COORDS.logo.x,
         y: COORDS.logo.y,
