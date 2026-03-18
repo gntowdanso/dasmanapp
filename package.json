@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma migrate deploy && next build",
+    "postbuild": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate"
@@ -24,10 +25,13 @@
     "jsonwebtoken": "^9.0.3",
     "jspdf": "^4.1.0",
     "jspdf-autotable": "^5.0.7",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.564.0",
     "next": "16.1.6",
     "papaparse": "^5.5.3",
     "pdf-lib": "^1.17.1",
+    "pdf2json": "^4.0.2",
+    "pdfjs-dist": "^5.5.207",
     "pg": "^8.18.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -35,6 +39,7 @@
     "react-signature-canvas": "^1.1.0-alpha.2",
     "tailwind-merge": "^3.4.1",
     "uuid": "^13.0.0",
+    "xml2js": "^0.6.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {

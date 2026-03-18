@@ -1,0 +1,8 @@
+{
+    "appService.zipIgnorePattern": [
+        "node_modules{,/**}",
+        ".vscode{,/**}"
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/26d482b2-5e17-40c6-aed3-5f152ed11e2b/resourceGroups/WebApps/providers/Microsoft.Web/sites/dasopswebapp",
+    "appService.deploySubpath": "."
+}

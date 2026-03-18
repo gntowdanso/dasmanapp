@@ -1,0 +1,93 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AdminUser {
+  id            String     @id @default(uuid())
+  name          String
+  email         String     @unique
+  password_hash String
+  role          String
+  created_at    DateTime   @default(now())
+  auditLogs     AuditLog[]
+}
+
+model Customer {
+  id             String  @id @default(uuid())
+  full_name      String
+  phone_number   String
+  account_number String?
+  external_id    String?
+  loan_status    String?
+
+  // New fields
+  loan_balance      String?
+  monthly_repayment String?
+  start_date        DateTime?
+  no_of_months      Int?
+
+  session_token String?              @unique
+  token_expiry  DateTime?
+  status        String
+  created_at    DateTime             @default(now())
+  mandates      DirectDebitMandate[]
+  messages      Message[]
+}
+
+model DirectDebitMandate {
+  id                     String               @id @default(uuid())
+  customer_id            String
+  ghana_card_number      String
+  agreement_accepted     Boolean
+  digital_signature_path String?
+  submitted_at           DateTime             @default(now())
+  ip_address             String?
+  accounts               DirectDebitAccount[]
+  customer               Customer             @relation(fields: [customer_id], references: [id])
+  generatedPDFs          GeneratedPDF[]
+}
+
+model DirectDebitAccount {
+  id             String             @id @default(uuid())
+  mandate_id     String
+  account_order  String
+  bank_name      String
+  branch         String
+  account_name   String
+  account_number String
+  mandate        DirectDebitMandate @relation(fields: [mandate_id], references: [id])
+}
+
+model Message {
+  id                  String   @id @default(uuid())
+  customer_id         String
+  type                String
+  message_body        String
+  status              String
+  provider_message_id String?
+  sent_at             DateTime @default(now())
+  customer            Customer @relation(fields: [customer_id], references: [id])
+}
+
+model GeneratedPDF {
+  id           String             @id @default(uuid())
+  mandate_id   String
+  file_path    String
+  generated_at DateTime           @default(now())
+  mandate      DirectDebitMandate @relation(fields: [mandate_id], references: [id])
+}
+
+model AuditLog {
+  id         String     @id @default(uuid())
+  admin_id   String?
+  action     String
+  metadata   String?
+  timestamp  DateTime   @default(now())
+  ip_address String?
+  admin      AdminUser? @relation(fields: [admin_id], references: [id])
+}

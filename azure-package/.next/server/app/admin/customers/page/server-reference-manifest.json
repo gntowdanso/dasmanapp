@@ -1,0 +1,65 @@
+{
+  "node": {
+    "00cb70bf50f93275d2a4fe5a5265ffe74c5a6d5871": {
+      "workers": {
+        "app/admin/customers/page": {
+          "moduleId": 41540,
+          "async": true,
+          "exportedName": "logout",
+          "filename": "app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/admin/customers/page": "action-browser"
+      },
+      "exportedName": "logout",
+      "filename": "app/actions/auth.ts"
+    },
+    "706998dd69c3c26eccb59e59cceff429d8cf63a843": {
+      "workers": {
+        "app/admin/customers/page": {
+          "moduleId": 41540,
+          "async": true,
+          "exportedName": "getCustomers",
+          "filename": "app/actions/customer.ts"
+        }
+      },
+      "layer": {
+        "app/admin/customers/page": "action-browser"
+      },
+      "exportedName": "getCustomers",
+      "filename": "app/actions/customer.ts"
+    },
+    "60d4cd36c939296ba5f736c2c1a4da940e26c397db": {
+      "workers": {
+        "app/admin/customers/page": {
+          "moduleId": 41540,
+          "async": true,
+          "exportedName": "updateCustomerDetails",
+          "filename": "app/actions/customer.ts"
+        }
+      },
+      "layer": {
+        "app/admin/customers/page": "action-browser"
+      },
+      "exportedName": "updateCustomerDetails",
+      "filename": "app/actions/customer.ts"
+    },
+    "40fe1587a4051b87176f2e826c4331b666d65ea489": {
+      "workers": {
+        "app/admin/customers/page": {
+          "moduleId": 41540,
+          "async": true,
+          "exportedName": "deleteCustomer",
+          "filename": "app/actions/customer.ts"
+        }
+      },
+      "layer": {
+        "app/admin/customers/page": "action-browser"
+      },
+      "exportedName": "deleteCustomer",
+      "filename": "app/actions/customer.ts"
+    }
+  },
+  "edge": {}
+}

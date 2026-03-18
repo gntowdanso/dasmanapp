@@ -1,0 +1,80 @@
+{
+  "node": {
+    "00cb70bf50f93275d2a4fe5a5265ffe74c5a6d5871": {
+      "workers": {
+        "app/admin/sms/trigger/page": {
+          "moduleId": 35819,
+          "async": true,
+          "exportedName": "logout",
+          "filename": "app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/admin/sms/trigger/page": "action-browser"
+      },
+      "exportedName": "logout",
+      "filename": "app/actions/auth.ts"
+    },
+    "000fbf76f4d4773dbede83ee71bb97c2b6aad2c881": {
+      "workers": {
+        "app/admin/sms/trigger/page": {
+          "moduleId": 35819,
+          "async": true,
+          "exportedName": "getCustomersForSMS",
+          "filename": "app/actions/sms.ts"
+        }
+      },
+      "layer": {
+        "app/admin/sms/trigger/page": "action-browser"
+      },
+      "exportedName": "getCustomersForSMS",
+      "filename": "app/actions/sms.ts"
+    },
+    "60c7482d48e4df62f235253309fe98d5c91e65f7ef": {
+      "workers": {
+        "app/admin/sms/trigger/page": {
+          "moduleId": 35819,
+          "async": true,
+          "exportedName": "sendBulkSMS",
+          "filename": "app/actions/sms.ts"
+        }
+      },
+      "layer": {
+        "app/admin/sms/trigger/page": "action-browser"
+      },
+      "exportedName": "sendBulkSMS",
+      "filename": "app/actions/sms.ts"
+    },
+    "6091ddbea43bdc1b3d1cd6fb19f791b19318abd0b8": {
+      "workers": {
+        "app/admin/sms/trigger/page": {
+          "moduleId": 35819,
+          "async": true,
+          "exportedName": "updateCustomerMobile",
+          "filename": "app/actions/customer.ts"
+        }
+      },
+      "layer": {
+        "app/admin/sms/trigger/page": "action-browser"
+      },
+      "exportedName": "updateCustomerMobile",
+      "filename": "app/actions/customer.ts"
+    },
+    "40fe1587a4051b87176f2e826c4331b666d65ea489": {
+      "workers": {
+        "app/admin/sms/trigger/page": {
+          "moduleId": 35819,
+          "async": true,
+          "exportedName": "deleteCustomer",
+          "filename": "app/actions/customer.ts"
+        }
+      },
+      "layer": {
+        "app/admin/sms/trigger/page": "action-browser"
+      },
+      "exportedName": "deleteCustomer",
+      "filename": "app/actions/customer.ts"
+    }
+  },
+  "edge": {}
+}

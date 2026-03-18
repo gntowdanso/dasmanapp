@@ -1,0 +1,17 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/sms/layout,_N_T_/admin/sms/trigger/layout,_N_T_/admin/sms/trigger/page,_N_T_/admin/sms/trigger"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/sms/trigger/__PAGE__",
+    "/admin/sms/trigger",
+    "/admin/sms",
+    "/admin",
+    "/_index",
+    "/_head"
+  ]
+}

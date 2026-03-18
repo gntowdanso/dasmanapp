@@ -1,0 +1,19 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/admin/customers/page": "/admin/customers",
+  "/admin/import/page": "/admin/import",
+  "/admin/loan-schedule/page": "/admin/loan-schedule",
+  "/admin/login/page": "/admin/login",
+  "/admin/mandates/download/page": "/admin/mandates/download",
+  "/admin/page": "/admin",
+  "/admin/sms/logs/page": "/admin/sms/logs",
+  "/admin/sms/trigger/page": "/admin/sms/trigger",
+  "/api/mandates/[id]/pdf/route": "/api/mandates/[id]/pdf",
+  "/api/mandates/route": "/api/mandates",
+  "/favicon.ico/route": "/favicon.ico",
+  "/mandate/page": "/mandate",
+  "/page": "/",
+  "/session/[token]/page": "/session/[token]",
+  "/success/page": "/success"
+}

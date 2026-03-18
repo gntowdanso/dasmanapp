@@ -1,0 +1,35 @@
+{
+  "node": {
+    "00cb70bf50f93275d2a4fe5a5265ffe74c5a6d5871": {
+      "workers": {
+        "app/admin/mandates/download/page": {
+          "moduleId": 90826,
+          "async": true,
+          "exportedName": "logout",
+          "filename": "app/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/admin/mandates/download/page": "action-browser"
+      },
+      "exportedName": "logout",
+      "filename": "app/actions/auth.ts"
+    },
+    "004c63ef8059cd55ab4dab2ada073385ac3a330446": {
+      "workers": {
+        "app/admin/mandates/download/page": {
+          "moduleId": 90826,
+          "async": true,
+          "exportedName": "getSubmittedMandates",
+          "filename": "app/actions/mandate.ts"
+        }
+      },
+      "layer": {
+        "app/admin/mandates/download/page": "action-browser"
+      },
+      "exportedName": "getSubmittedMandates",
+      "filename": "app/actions/mandate.ts"
+    }
+  },
+  "edge": {}
+}

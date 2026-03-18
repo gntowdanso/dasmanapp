@@ -1,0 +1,19 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/customers/page": "app/admin/customers/page.js",
+  "/admin/import/page": "app/admin/import/page.js",
+  "/admin/loan-schedule/page": "app/admin/loan-schedule/page.js",
+  "/admin/login/page": "app/admin/login/page.js",
+  "/admin/mandates/download/page": "app/admin/mandates/download/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/sms/logs/page": "app/admin/sms/logs/page.js",
+  "/admin/sms/trigger/page": "app/admin/sms/trigger/page.js",
+  "/api/mandates/[id]/pdf/route": "app/api/mandates/[id]/pdf/route.js",
+  "/api/mandates/route": "app/api/mandates/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/mandate/page": "app/mandate/page.js",
+  "/page": "app/page.js",
+  "/session/[token]/page": "app/session/[token]/page.js",
+  "/success/page": "app/success/page.js"
+}
